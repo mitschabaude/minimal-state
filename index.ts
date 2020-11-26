@@ -1,27 +1,33 @@
 // simple and powerful implementation of react global state
-import { useEffect, useState } from "react";
+import {useEffect, useState} from 'react';
 
-export default function <T extends {}, K extends keyof T>(state: T) {
+export default function <T extends {}>(state: T) {
+  type K = keyof T;
   let map = new Map<K | undefined, Set<() => void>>();
+
+  function use<L extends K>(): T;
+  function use<L extends K>(key: L): T[L];
+  function use<L extends K>(key?: L): T[L] | T {
+    let [, setState] = useState(0);
+    useEffect(() => {
+      let isOff = false;
+      let updater = () => {
+        if (!isOff) setState(n => n + 1);
+      };
+      self.on(key, updater);
+      return () => {
+        isOff = true;
+        self.off(key, updater);
+      };
+    }, [key]);
+    return key === undefined ? state : state[key];
+  }
+
   let self = {
     // main API
-    use(key?: K) {
-      let [, setState] = useState(0);
-      useEffect(() => {
-        let isOff = false;
-        let updater = () => {
-          if (!isOff) setState((n) => n + 1);
-        };
-        self.on(key, updater);
-        return () => {
-          isOff = true;
-          self.off(key, updater);
-        };
-      }, [key]);
-      return key === undefined ? state : state[key];
-    },
+    use,
 
-    set(key: K, value: T[K]) {
+    set<L extends K>(key: L, value: T[L]) {
       state[key] = value;
       self.update(key);
     },

@@ -1,0 +1,22 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "http-server .",
+    "build": "esbuild index.tsx --bundle --minify --outfile=bundle.min.js --define:process.env.NODE_ENV='\"production\"'"
+  },
+  "dependencies": {
+    "minimal-state": "file:../",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "esbuild": "^0.8.15",
+    "http-server": "^0.12.3",
+    "typescript": "^4.1.2"
+  }
+}

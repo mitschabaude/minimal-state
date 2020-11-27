@@ -1,40 +1,39 @@
 // simple and powerful implementation of react global state
 import {useEffect, useState} from 'react';
 
-export default function <T extends {}>(state: T) {
+export default function <T extends {}>(initialState: T) {
   type K = keyof T;
   let map = new Map<K | undefined, Set<() => void>>();
 
-  function use<L extends K>(): T;
-  function use<L extends K>(key: L): T[L];
-  function use<L extends K>(key?: L): T[L] | T {
-    let [, setState] = useState(0);
-    useEffect(() => {
-      let isOff = false;
-      let updater = () => {
-        if (!isOff) setState(n => n + 1);
-      };
-      self.on(key, updater);
-      return () => {
-        isOff = true;
-        self.off(key, updater);
-      };
-    }, [key]);
-    return key === undefined ? state : state[key];
-  }
-
-  let self = {
+  let api = {
     // main API
-    use,
+    use: (<L extends K>(key?: L): T[L] | T => {
+      let [, setState] = useState(0);
+      useEffect(() => {
+        let isOff = false;
+        let updater = () => {
+          if (!isOff) setState(n => n + 1);
+        };
+        state.on(key, updater);
+        return () => {
+          isOff = true;
+          state.off(key, updater);
+        };
+      }, [key]);
+      return key === undefined ? state : state[key];
+    }) as {
+      <L extends K>(): T;
+      <L extends K>(key: L): T[L];
+    },
 
     set<L extends K>(key: L, value: T[L]) {
-      state[key] = value;
-      self.update(key);
+      (state as T)[key] = value;
+      state.update(key);
     },
 
     update(key?: K) {
-      self.emit(key);
-      if (key !== undefined) self.emit(undefined);
+      state.emit(key);
+      if (key !== undefined) state.emit(undefined);
     },
 
     // lower level API, implements simple event emitter
@@ -64,5 +63,6 @@ export default function <T extends {}>(state: T) {
     map,
   };
 
-  return Object.assign(self, state);
+  let state = Object.assign(initialState, api);
+  return state;
 }

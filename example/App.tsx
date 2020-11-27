@@ -1,6 +1,6 @@
 import {render} from 'react-dom';
 import React from 'react';
-import State from 'minimal-state/dist/index';
+import State from 'minimal-state';
 
 type Todo = {name: string; done: boolean};
 let state = State({

@@ -3,30 +3,46 @@ import React from 'react';
 import State from 'minimal-state/dist/index';
 
 type Todo = {name: string; done: boolean};
-let state = State({todos: [] as Todo[], newTodo: null as Todo | null});
+let state = State({
+  todos: [] as Todo[],
+  newTodo: null as Todo | null,
+  lastEdit: null as Date | null,
+});
 let {use, set, update, on, off} = state;
 
-on('todos', onFirstTodo);
+// computed properties
+on('todos', () => set('lastEdit', new Date()));
 
-function onFirstTodo() {
-  alert('Congrats! You added your first todo!');
-  off('todos', onFirstTodo);
-}
+// do something on state changes
+on('todos', function onFirstTodo() {
+  if (state.todos.length > 0) {
+    alert('Congrats! You added your first todo!');
+    off('todos', onFirstTodo);
+  }
+});
 
 function App() {
-  let {newTodo, todos} = use();
+  let {newTodo, todos, lastEdit} = use();
+  let add = () => set('newTodo', {name: '', done: false});
+  let clear = () =>
+    set(
+      'todos',
+      todos.filter(t => !t.done)
+    );
   return (
     <div>
-      <h1>Todos</h1>
+      <h1>Todos ({todos.length})</h1>
       <p>
         {todos.map((todo, i) => (
           <TodoItem key={todo.name + i} todo={todo} />
         ))}
       </p>
-      {(newTodo && <TodoInput />) || (
-        <button onClick={() => set('newTodo', {name: '', done: false})}>
-          Add
-        </button>
+      <p>{(newTodo && <TodoInput />) || <button onClick={add}>Add</button>}</p>
+      <p>
+        <button onClick={clear}>Clear</button>
+      </p>
+      {lastEdit && (
+        <p style={{color: '#aaa'}}>Last edited: {lastEdit.toLocaleString()}</p>
       )}
     </div>
   );
@@ -46,16 +62,7 @@ function TodoItem({todo}: {todo: Todo}) {
       />
       <span style={done ? {textDecoration: 'line-through'} : undefined}>
         {name}
-      </span>{' '}
-      <button
-        onClick={() => {
-          let i = state.todos.indexOf(todo);
-          state.todos.splice(i, 1);
-          update('todos');
-        }}
-      >
-        x
-      </button>
+      </span>
     </div>
   );
 }

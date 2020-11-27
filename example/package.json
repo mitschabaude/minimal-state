@@ -1,11 +1,7 @@
 {
-  "name": "example",
-  "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT",
   "scripts": {
     "start": "http-server .",
-    "build": "esbuild index.tsx --bundle --minify --outfile=bundle.min.js --define:process.env.NODE_ENV='\"production\"'"
+    "build": "esbuild App.tsx --bundle --minify --outfile=bundle.min.js --define:process.env.NODE_ENV='\"production\"'"
   },
   "dependencies": {
     "minimal-state": "file:../",

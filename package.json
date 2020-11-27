@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "author": "Gregor Mitscha-Baude <gregor.mitscha-baude@gmx.at>",
   "license": "MIT",
+  "repository": "github:mitschabaude/minimal-state",
   "main": "dist/index.js",
   "browser": "dist/index.js",
   "types": "dist/index.d.ts",

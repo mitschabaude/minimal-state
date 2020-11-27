@@ -3,7 +3,7 @@ import {useEffect, useState} from 'react';
 
 export default function <T extends {}>(initialState: T) {
   type K = keyof T;
-  let map = new Map<K | undefined, Set<() => void>>();
+  let map = new Map<K | undefined, Set<(...args: unknown[]) => void>>();
 
   let api = {
     // main API
@@ -37,23 +37,23 @@ export default function <T extends {}>(initialState: T) {
     },
 
     // lower level API, implements simple event emitter
-    on(key: K | undefined, listener: () => void) {
+    on(key: K | undefined, listener: (...args: unknown[]) => void) {
       if (!map.has(key)) map.set(key, new Set());
       map.get(key)!.add(listener);
     },
 
-    off(key: K | undefined, listener: () => void) {
+    off(key: K | undefined, listener: (...args: unknown[]) => void) {
       let listeners = map.get(key);
       if (!listeners) return;
       listeners.delete(listener);
       if (listeners.size === 0) map.delete(key);
     },
 
-    emit(key: K | undefined) {
+    emit(key: K | undefined, ...args: unknown[]) {
       if (!map.has(key)) return;
       for (let listener of map.get(key)!) {
         try {
-          listener();
+          listener(...args);
         } catch (err) {
           console.error(err);
         }

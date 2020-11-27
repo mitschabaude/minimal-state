@@ -7,8 +7,9 @@ let state = State({
   todos: [] as Todo[],
   newTodo: null as Todo | null,
   lastEdit: null as Date | null,
+  mousedown: null,
 });
-let {use, set, update, on, off} = state;
+let {use, set, update, on, off, emit} = state;
 
 // computed properties
 on('todos', () => set('lastEdit', new Date()));
@@ -20,6 +21,10 @@ on('todos', function onFirstTodo() {
     off('todos', onFirstTodo);
   }
 });
+
+// produce non-state events
+document.addEventListener('mousedown', () => emit('mousedown', Date.now()));
+on('mousedown', time => console.log('mouse down', time));
 
 function App() {
   let {newTodo, todos, lastEdit} = use();

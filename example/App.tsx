@@ -22,13 +22,12 @@ on('todos', function onFirstTodo() {
   }
 });
 
-// produce non-state events
+// emit arbitrary events
 document.addEventListener('mousedown', () => emit('mousedown', Date.now()));
 on('mousedown', time => console.log('mouse down', time));
 
 function App() {
-  let {newTodo, todos, lastEdit} = use();
-  let add = () => set('newTodo', {name: '', done: false});
+  let {todos, lastEdit} = use();
   let clear = () =>
     set(
       'todos',
@@ -37,12 +36,12 @@ function App() {
   return (
     <div>
       <h1>Todos ({todos.length})</h1>
+      <TodoInput />
       <p>
         {todos.map((todo, i) => (
           <TodoItem key={todo.name + i} todo={todo} />
         ))}
       </p>
-      <p>{(newTodo && <TodoInput />) || <button onClick={add}>Add</button>}</p>
       <p>
         <button onClick={clear}>Clear</button>
       </p>
@@ -75,28 +74,22 @@ function TodoItem({todo}: {todo: Todo}) {
 function TodoInput() {
   let newTodo = use('newTodo');
   return (
-    <>
-      <input
-        autoFocus
-        type="text"
-        onChange={({target: {value}}) => {
-          set('newTodo', {name: value, done: false});
-        }}
-        value={newTodo?.name}
-      />
-      <br />
-      <button
-        onClick={() => {
+    <input
+      type="text"
+      placeholder="Add Todo and press Enter"
+      onChange={({target: {value}}) => {
+        set('newTodo', {name: value, done: false});
+      }}
+      onKeyPress={({key}) => {
+        if (key === 'Enter') {
           if (!newTodo) return;
           state.todos.push(newTodo);
           update('todos');
           set('newTodo', null);
-        }}
-      >
-        Add
-      </button>
-      <button onClick={() => set('newTodo', null)}>Cancel</button>
-    </>
+        }
+      }}
+      value={newTodo?.name || ''}
+    />
   );
 }
 

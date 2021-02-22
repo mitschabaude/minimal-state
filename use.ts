@@ -1,10 +1,18 @@
 // simple and powerful implementation of react global state
 import {useEffect, useState} from 'react';
-import {StateType} from './state';
+
+export type StateType<T> = {
+  get: {
+    (): T;
+    <L extends keyof T>(key?: L): T[L];
+  };
+  on(key: keyof T | undefined, listener: (...args: unknown[]) => void): void;
+  off(key: keyof T | undefined, listener: (...args: unknown[]) => void): void;
+};
 
 function use<T>(state: StateType<T>): T;
 function use<T, L extends keyof T>(state: StateType<T>, key: L): T[L];
-function use<T, L extends keyof T>(state: StateType<T>, key?: L): T[L] | T {
+function use<T, L extends keyof T>(state: StateType<T>, key?: L) {
   let [, setState] = useState(0);
   useEffect(() => {
     let isOff = false;
@@ -17,7 +25,7 @@ function use<T, L extends keyof T>(state: StateType<T>, key?: L): T[L] | T {
       state.off(key, updater);
     };
   }, [key]);
-  return key === undefined ? state : state[key];
+  return state.get(key);
 }
 
 export {use};

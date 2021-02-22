@@ -1,24 +1,24 @@
 import {render} from 'react-dom';
 import React from 'react';
-import State from 'minimal-state';
+import State from 'minimal-state/state';
+import {use} from 'minimal-state/use';
 
 type Todo = {name: string; done: boolean};
-let state = State({
+const state = State({
   todos: [] as Todo[],
   newTodo: null as Todo | null,
   lastEdit: null as Date | null,
   mousedown: null,
 });
-let {use, set, update, on, off, emit} = state;
+let {set, update, on, once, emit} = state;
 
 // computed properties
 on('todos', () => set('lastEdit', new Date()));
 
 // do something on state changes
-on('todos', function onFirstTodo() {
+once('todos', () => {
   if (state.todos.length > 0) {
     alert('Congrats! You added your first todo!');
-    off('todos', onFirstTodo);
   }
 });
 
@@ -27,12 +27,8 @@ document.addEventListener('mousedown', () => emit('mousedown', Date.now()));
 on('mousedown', time => console.log('mouse down', time));
 
 function App() {
-  let {todos, lastEdit} = use();
-  let clear = () =>
-    set(
-      'todos',
-      todos.filter(t => !t.done)
-    );
+  let {todos, lastEdit} = use(state);
+  let clear = () => set('todos', todos => todos.filter(t => !t.done));
   return (
     <div>
       <h1>Todos ({todos.length})</h1>
@@ -56,23 +52,25 @@ function TodoItem({todo}: {todo: Todo}) {
   let {name, done} = todo;
   return (
     <div>
-      <input
-        type="checkbox"
-        checked={done}
-        onChange={({target: {checked}}) => {
-          todo.done = checked;
-          update('todos');
-        }}
-      />
-      <span style={done ? {textDecoration: 'line-through'} : undefined}>
-        {name}
-      </span>
+      <label>
+        <input
+          type="checkbox"
+          checked={done}
+          onChange={({target: {checked}}) => {
+            todo.done = checked;
+            update('todos');
+          }}
+        />
+        <span style={done ? {textDecoration: 'line-through'} : undefined}>
+          {name}
+        </span>
+      </label>
     </div>
   );
 }
 
 function TodoInput() {
-  let newTodo = use('newTodo');
+  let newTodo = use(state, 'newTodo');
   return (
     <input
       type="text"

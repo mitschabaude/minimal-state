@@ -1,7 +1,6 @@
 import {render} from 'react-dom';
 import React from 'react';
-import State from 'minimal-state/state';
-import {use} from 'minimal-state/use';
+import State, {use} from 'minimal-state';
 
 type Todo = {name: string; done: boolean};
 const state = State({

@@ -12,7 +12,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc --emitDeclarationOnly && esbuild index.ts --bundle --minify --outfile=dist/index.js --external:react --format=esm --target=es6"
+    "build": "tsc --emitDeclarationOnly && esbuild index.ts --bundle --minify --outfile=dist/index.js --external:react --format=esm --target=es6",
+    "size": "cat dist/index.js | gzip | wc -c"
   },
   "peerDependencies": {
     "react": ">=16.8.0"

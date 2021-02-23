@@ -1,10 +1,10 @@
 {
-  "name": "minimal-state",
+  "name": "use-minimal-state",
+  "version": "1.0.0",
   "description": "Simple and powerful React state management tool",
-  "version": "3.0.0",
   "author": "Gregor Mitscha-Baude <gregor.mitscha-baude@gmx.at>",
   "license": "MIT",
-  "repository": "github:mitschabaude/minimal-state",
+  "repository": "github:mitschabaude/minimal-state/use-minimal-state",
   "main": "dist/index.js",
   "browser": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,12 +12,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc --emitDeclarationOnly && esbuild index.ts --bundle --minify --outfile=dist/index.js --format=esm --target=es6",
+    "build": "tsc --emitDeclarationOnly && esbuild index.ts --bundle --outfile=dist/index.js --external:react --format=esm --target=es6",
     "size": "cat dist/index.js | gzip | wc -c"
   },
-  "peerDependencies": {},
   "devDependencies": {
+    "@types/react": ">=16.8.0",
     "esbuild": "^0.8.50",
-    "typescript": "^4.1.2"
+    "typescript": "^4.1.5"
+  },
+  "dependencies": {
+    "react": ">=16.8.0"
   }
 }

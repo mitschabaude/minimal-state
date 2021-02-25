@@ -1,9 +1,17 @@
 // simple and powerful implementation of react global state
 import {useEffect, useRef, useState} from 'react';
-import State from '../index';
 
-export {get, set, update, on, off, once, emit, clear} from '../index';
-export default State;
+export {
+  default as default,
+  get,
+  set,
+  update,
+  on,
+  off,
+  once,
+  emit,
+  clear,
+} from 'minimal-state';
 
 export {use};
 

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es6",
     "declaration": true,
-    "outDir": "dist/",
+    "outDir": "minimal-state/dist",
     "removeComments": true,
     "strict": true,
     "noImplicitAny": true,
@@ -15,5 +15,5 @@
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true
   },
-  "include": ["./index.ts"]
+  "include": ["minimal-state/index.ts"]
 }

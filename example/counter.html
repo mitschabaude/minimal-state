@@ -4,7 +4,7 @@
     <script type="module">
       import {createElement as h} from 'https://cdn.skypack.dev/react';
       import {render} from 'https://cdn.skypack.dev/react-dom';
-      import State, {use} from 'https://cdn.skypack.dev/minimal-state';
+      import State, {use, set} from 'https://cdn.skypack.dev/use-minimal-state';
 
       const state = State({count: 0});
 
@@ -14,7 +14,7 @@
           'div',
           null,
           count + ' ',
-          h('button', {onClick: () => state.set('count', count + 1)}, '+1')
+          h('button', {onClick: () => set(state, 'count', count + 1)}, '+1')
         );
       }
       render(h(App), document.getElementById('root'));

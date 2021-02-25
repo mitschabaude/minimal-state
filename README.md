@@ -1,4 +1,4 @@
-# use-minimal-state
+# minimal-state
 
 Probably the only React state management library I ever want to use.
 
@@ -40,4 +40,29 @@ function App() {
     </>
   );
 }
+```
+
+## Without React
+
+There is an even smaller submodule (430 bytes) that does not depend on React and contains the reactive `State` API without the `use` hook:
+
+```sh
+yarn add minimal-state
+```
+
+```js
+import State from 'minimal-state';
+
+let state = State({count: 0});
+
+state.on('count', c => console.log('The count is', c));
+
+state.set('count', c => c + 1);
+// Console: "The count is 1"
+
+state.count = 9000;
+state.update('count');
+// Console: "The count is 9000"
+
+state.clear(); // removes all event listeners
 ```

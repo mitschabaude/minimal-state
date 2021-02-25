@@ -20,7 +20,8 @@
     "esbuild": "^0.8.50",
     "typescript": "^4.1.5"
   },
-  "dependencies": {
+  "dependencies": {},
+  "peerDependencies": {
     "react": ">=16.8.0"
   }
 }

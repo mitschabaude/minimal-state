@@ -1,6 +1,6 @@
 import {render} from 'react-dom';
 import React from 'react';
-import State, {use} from 'minimal-state';
+import State, {use} from 'use-minimal-state';
 
 type Todo = {name: string; done: boolean};
 const state = State({
@@ -9,7 +9,6 @@ const state = State({
   lastEdit: null as Date | null,
   mousedown: null,
 });
-let {set, update, on, once, emit} = state;
 
 // computed properties
 on('todos', () => set('lastEdit', new Date()));
@@ -26,17 +25,18 @@ document.addEventListener('mousedown', () => emit('mousedown', Date.now()));
 on('mousedown', time => console.log('mouse down', time));
 
 function App() {
-  let {todos, lastEdit} = use(state);
+  let [todos, lastEdit] = use(state, ['todos', 'lastEdit']);
   let clear = () => set('todos', todos => todos.filter(t => !t.done));
   return (
     <div>
       <h1>Todos ({todos.length})</h1>
       <TodoInput />
-      <p>
+      <Space />
+      <div>
         {todos.map((todo, i) => (
           <TodoItem key={todo.name + i} todo={todo} />
         ))}
-      </p>
+      </div>
       <p>
         <button onClick={clear}>Clear</button>
       </p>
@@ -88,6 +88,10 @@ function TodoInput() {
       value={newTodo?.name || ''}
     />
   );
+}
+
+function Space({rem = 1}) {
+  return <div style={{height: `${rem}rem`}}></div>;
 }
 
 render(<App />, document.getElementById('root'));

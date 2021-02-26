@@ -1,5 +1,6 @@
 export type MinimalStateType<T> = T & {
   _events: Map<keyof T | undefined, Set<(...args: unknown[]) => void>>;
+  _debug: boolean;
 };
 
 export type StateType<T> = T & {
@@ -13,11 +14,16 @@ export type StateType<T> = T & {
   emit(key: keyof T | undefined, ...args: unknown[]): void;
   clear(): void;
   _events: Map<keyof T | undefined, Set<(...args: unknown[]) => void>>;
+  _debug: boolean;
 };
 
-export default function State<T extends {}>(initialState: T): StateType<T> {
+export default function State<T extends {}>(
+  initialState: T,
+  options?: {debug: boolean}
+): StateType<T> {
   type K = keyof T;
   let _events = new Map<K | undefined, Set<(...args: unknown[]) => void>>();
+  let _debug = options?.debug || false;
 
   let api = {
     // main API
@@ -44,9 +50,10 @@ export default function State<T extends {}>(initialState: T): StateType<T> {
       clear(state);
     },
     _events,
+    _debug,
   };
 
-  let state = Object.assign(initialState, api);
+  let state = Object.assign({}, initialState, api);
   return state;
 }
 
@@ -58,16 +65,20 @@ function set<T, L extends keyof T>(
   key: L,
   valueOrFunction: T[L] | ((state: T[L]) => T[L])
 ) {
+  let oldValue = state[key];
   let value =
     typeof valueOrFunction === 'function'
       ? (valueOrFunction as (state: T[L]) => T[L])(state[key])
       : valueOrFunction;
   (state as T)[key] = value;
-  update(state, key);
+  if (state._debug) console.log('update', key, value);
+  emit(state, key, value, oldValue);
+  emit(state, undefined, state);
 }
 
 function update<T>(state: MinimalStateType<T>, key?: keyof T) {
   if (key !== undefined) {
+    if (state._debug) console.log('update', key, state[key]);
     emit(state, key, state[key]);
   }
   emit(state, undefined, state);

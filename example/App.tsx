@@ -3,11 +3,14 @@ import React from 'react';
 import State, {use, set, update, on, once} from 'use-minimal-state';
 
 type Todo = {name: string; done: boolean};
-const state = State({
-  todos: [] as Todo[],
-  newTodo: null as Todo | null,
-  lastEdit: null as Date | null,
-});
+const state = State(
+  {
+    todos: [] as Todo[],
+    newTodo: null as Todo | null,
+    lastEdit: null as Date | null,
+  },
+  {debug: true}
+);
 
 // computed properties
 on(state, 'todos', () => set(state, 'lastEdit', new Date()));

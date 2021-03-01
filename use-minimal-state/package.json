@@ -1,6 +1,6 @@
 {
   "name": "use-minimal-state",
-  "version": "2.1.1",
+  "version": "3.0.0",
   "description": "Simple and powerful React state management tool",
   "author": "Gregor Mitscha-Baude <gregor.mitscha-baude@gmx.at>",
   "license": "MIT",

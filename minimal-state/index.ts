@@ -9,8 +9,10 @@ export type StateType<T> = T & {
     valueOrFunction: T[L] | ((state: T[L]) => T[L])
   ): void;
   update(key?: keyof T): void;
-  on(key: keyof T | undefined, listener: (...args: unknown[]) => void): void;
-  off(key: keyof T | undefined, listener: (...args: unknown[]) => void): void;
+  on(
+    key: keyof T | undefined,
+    listener: (...args: unknown[]) => void
+  ): () => void;
   emit(key: keyof T | undefined, ...args: unknown[]): void;
   clear(): void;
   _events: Map<keyof T | undefined, Set<(...args: unknown[]) => void>>;
@@ -38,10 +40,7 @@ export default function State<T extends {}>(
     },
     // lower level API, implements simple event emitter
     on(key: K | undefined, listener: (...args: unknown[]) => void) {
-      on(state, key, listener);
-    },
-    off(key: K | undefined, listener: (...args: unknown[]) => void) {
-      off(state, key, listener);
+      return on(state, key, listener);
     },
     emit(key: K | undefined, ...args: unknown[]) {
       emit(state, key, ...args);
@@ -73,25 +72,47 @@ function set<T, L extends keyof T>(
   (state as T)[key] = value;
   if (state._debug) console.log('update', key, value);
   emit(state, key, value, oldValue);
-  emit(state, undefined, state);
+  emit(state, undefined, key, value, oldValue);
 }
 
 function update<T>(state: MinimalStateType<T>, key?: keyof T) {
   if (key !== undefined) {
-    if (state._debug) console.log('update', key, state[key]);
-    emit(state, key, state[key]);
+    let value = state[key];
+    if (state._debug) console.log('update', key, value);
+    emit(state, key, value);
+    emit(state, undefined, key, value);
+  } else {
+    emit(state, undefined);
   }
-  emit(state, undefined, state);
 }
 
 // lower level API, implements simple event emitter
 function on<T>(
   state: MinimalStateType<T>,
+  listener: (...args: unknown[]) => void
+): () => void;
+function on<T>(
+  state: MinimalStateType<T>,
   key: keyof T | undefined,
   listener: (...args: unknown[]) => void
+): () => void;
+function on<T>(
+  state: MinimalStateType<T>,
+  keyOrListener: keyof T | undefined | ((...args: unknown[]) => void),
+  listenerOrNone?: ((...args: unknown[]) => void) | undefined
 ) {
-  if (!state._events.has(key)) state._events.set(key, new Set());
-  state._events.get(key)!.add(listener);
+  let {_events} = state;
+  let key: keyof T | undefined, listener: (...args: unknown[]) => void;
+  if (listenerOrNone === undefined) {
+    key = undefined;
+    listener = keyOrListener as (...args: unknown[]) => void;
+  } else {
+    key = keyOrListener as keyof T | undefined;
+    listener = listenerOrNone as (...args: unknown[]) => void;
+  }
+  if (!_events.has(key)) _events.set(key, new Set());
+  _events.get(key)!.add(listener);
+  return () => off(state, key, listener);
 }
 
 function off<T>(
@@ -99,10 +120,11 @@ function off<T>(
   key: keyof T | undefined,
   listener: (...args: unknown[]) => void
 ) {
-  let listeners = state._events.get(key);
+  let {_events} = state;
+  let listeners = _events.get(key);
   if (!listeners) return;
   listeners.delete(listener);
-  if (listeners.size === 0) state._events.delete(key);
+  if (listeners.size === 0) _events.delete(key);
 }
 
 function emit<T>(
@@ -110,8 +132,9 @@ function emit<T>(
   key: keyof T | undefined,
   ...args: unknown[]
 ) {
-  if (!state._events.has(key)) return;
-  for (let listener of state._events.get(key)!) {
+  let {_events} = state;
+  if (!_events.has(key)) return;
+  for (let listener of _events.get(key)!) {
     try {
       listener(...args);
     } catch (err) {
@@ -147,5 +170,5 @@ function once<T>(
     }
     off(state, key, listener_);
   };
-  on(state, key, listener_);
+  return on(state, key, listener_);
 }

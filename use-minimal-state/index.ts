@@ -1,5 +1,6 @@
 // simple and powerful implementation of react global state
 import {useEffect, useRef, useState} from 'react';
+import {StateType, on, off} from 'minimal-state';
 
 export {
   default as default,
@@ -14,11 +15,6 @@ export {
 } from 'minimal-state';
 
 export {use};
-
-type StateType<T> = T & {
-  on(key: keyof T | undefined, listener: (...args: unknown[]) => void): void;
-  off(key: keyof T | undefined, listener: (...args: unknown[]) => void): void;
-};
 
 function use<T>(state: StateType<T>): T;
 function use<T, L extends keyof T>(state: StateType<T>, key: L): T[L];
@@ -35,23 +31,22 @@ function use<
   K extends readonly [keyof T, ...(keyof T)[]] | readonly (keyof T)[]
 >(state: StateType<T>, key?: L | K) {
   let [, setState] = useState(0);
-  let newKeys: K = key instanceof Array ? key : (([key] as unknown) as K);
+  let newKeys: K =
+    key instanceof Array ? (key as K) : (([key] as unknown) as K);
   let keys = useStableArray(newKeys);
 
   useEffect(() => {
     let isOff = false;
     let updater = () => {
-      if (!isOff) {
-        setState(n => n + 1);
-      }
+      if (!isOff) setState(n => n + 1);
     };
     for (let key of keys) {
-      state.on(key, updater);
+      on(state, key, updater);
     }
     return () => {
       isOff = true;
       for (let key of keys) {
-        state.off(key, updater);
+        off(state, key, updater);
       }
     };
   }, [keys]);
@@ -73,10 +68,10 @@ function useOne<T, L extends keyof T>(state: StateType<T>, key?: L) {
     let updater = () => {
       if (!isOff) setState(n => n + 1);
     };
-    state.on(key, updater);
+    let off = state.on(key, updater);
     return () => {
       isOff = true;
-      state.off(key, updater);
+      off();
     };
   }, [key]);
   return key === undefined ? state : state[key as keyof T];
@@ -99,12 +94,12 @@ function useMany<
       if (!isOff) setState(n => n + 1);
     };
     for (let key of keys_) {
-      state.on(key, updater);
+      on(state, key, updater);
     }
     return () => {
       isOff = true;
       for (let key of keys_) {
-        state.off(key, updater);
+        off(state, key, updater);
       }
     };
   }, [keys_]);

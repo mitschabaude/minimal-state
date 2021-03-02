@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "build": "tsc --emitDeclarationOnly && esbuild index.ts --bundle --outfile=dist/index.js --format=esm --target=es6",
-    "size": "cat dist/index.js | yarn esbuild --minify | gzip | wc -c"
+    "size": "cat dist/index.js | esbuild --minify | gzip | wc -c"
   },
   "peerDependencies": {},
   "devDependencies": {

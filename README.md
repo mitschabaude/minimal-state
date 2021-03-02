@@ -4,7 +4,7 @@ Probably the only React state management library I ever want to use.
 
 - 🚀 Optimized for fast development. API supports mutable + immutable code styles
 - 💡 Perfect TypeScript support
-- 🪶 816 bytes minzipped - so light-weight you can just drop it anywhere
+- 🪶 758 bytes minzipped - so light-weight you can just drop it anywhere
 
 ```sh
 yarn add use-minimal-state
@@ -44,7 +44,7 @@ function App() {
 
 ## Without React
 
-There is an even smaller submodule (584 bytes) that does not depend on React and contains the reactive `State` API without the `use` hook:
+There is an even smaller submodule (529 bytes) that does not depend on React and contains the reactive `State` API without the `use` hook:
 
 ```sh
 yarn add minimal-state
@@ -67,7 +67,7 @@ state.update('count');
 state.clear(); // removes all event listeners
 ```
 
-The API is written in a functional style (`set(state, 'count', 1)`), but for convenience the core methods are also tacked to the state object (`state.set('count', 1)`).
+The API is written in a functional style `set(state, 'count', 1)` but for convenience the core methods are also tacked to the state object `state.set('count', 1)`.
 
 ## API Reference
 

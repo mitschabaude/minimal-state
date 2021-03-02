@@ -2,3 +2,4 @@ node_modules
 .vscode
 dist
 yarn.lock
+use-minimal-state/README.md

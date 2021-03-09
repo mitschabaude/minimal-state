@@ -1,6 +1,6 @@
 import {render} from 'react-dom';
 import React from 'react';
-import State, {use, set, update, on, once} from 'use-minimal-state';
+import State, {use, set, update, on, next, merge} from 'use-minimal-state';
 
 type Todo = {name: string; done: boolean};
 const state = State(
@@ -9,18 +9,19 @@ const state = State(
     newTodo: null as Todo | null,
     lastEdit: null as Date | null,
   },
-  {debug: true}
+  {debug: true, minimal: true}
 );
 
 // computed properties
 on(state, 'todos', () => set(state, 'lastEdit', new Date()));
 
 // do something on state changes
-once(state, 'todos', () => {
+(async () => {
+  await next(state, 'todos');
   if (state.todos.length > 0) {
     alert('Congrats! You added your first todo!');
   }
-});
+})();
 
 function App() {
   let [todos, lastEdit] = use(state, ['todos', 'lastEdit']);
@@ -80,7 +81,7 @@ function TodoInput() {
           if (!newTodo) return;
           state.todos.push(newTodo);
           update(state, 'todos');
-          set(state, 'newTodo', null);
+          merge(state, {newTodo: null});
         }
       }}
       value={newTodo?.name || ''}

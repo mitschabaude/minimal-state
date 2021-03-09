@@ -4,7 +4,7 @@ Probably the only React state management library I ever want to use.
 
 - 🚀 Optimized for fast development. API supports mutable + immutable code styles
 - 💡 Perfect TypeScript support
-- 🪶 758 bytes minzipped - so light-weight you can just drop it anywhere
+- 🪶 1 kB minzipped - just drop it anywhere
 
 ```sh
 yarn add use-minimal-state

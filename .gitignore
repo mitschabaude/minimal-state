@@ -3,3 +3,4 @@ node_modules
 dist
 yarn.lock
 use-minimal-state/README.md
+minimal-state/README.md

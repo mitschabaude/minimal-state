@@ -19,15 +19,15 @@ export type StateType<T> = T & {
 
 function State<T extends {}, M extends true>(
   initialState: T,
-  options?: {debug: boolean; minimal: M}
+  options?: {debug?: boolean; minimal?: M}
 ): MinimalStateType<T>;
 function State<T extends {}, M extends false | undefined>(
   initialState: T,
-  options?: {debug: boolean; minimal: M}
+  options?: {debug?: boolean; minimal?: M}
 ): StateType<T>;
 function State<T extends {}, M extends boolean | undefined>(
   initialState: T,
-  options?: {debug: boolean; minimal: M}
+  options?: {debug?: boolean; minimal?: M}
 ): StateType<T> | MinimalStateType<T> {
   type K = keyof T;
   let _events = new Map<K | undefined, Set<(...args: unknown[]) => void>>();

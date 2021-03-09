@@ -44,7 +44,7 @@ function App() {
 
 ## Without React
 
-There is an even smaller submodule (529 bytes) that does not depend on React and contains the reactive `State` API without the `use` hook:
+There is an even smaller submodule (788 bytes) that does not depend on React and contains the reactive `State` API without the `use` hook:
 
 ```sh
 yarn add minimal-state

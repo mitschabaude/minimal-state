@@ -70,7 +70,7 @@ function State<T extends {}, M extends boolean | undefined>(
 }
 
 export default State;
-export {get, set, update, on, off, once, emit, clear, pure, next};
+export {get, set, update, on, off, once, emit, clear, pure, next, merge};
 
 // main API
 function set<T, L extends keyof T>(
@@ -180,16 +180,24 @@ function once<T>(
   listener: (...args: unknown[]) => void
 ) {
   let listener_ = (...args: unknown[]) => {
-    try {
-      listener(...args);
-    } catch (err) {
-      console.error(err);
-    }
     off(state, key, listener_);
+    listener(...args);
   };
   return on(state, key, listener_);
 }
 
 function next<T>(state: MinimalStateType<T>, key: keyof T | undefined) {
   return new Promise(r => once(state, key, value => r(value)));
+}
+
+function merge<T>(state: MinimalStateType<T>, newState: Partial<T>) {
+  let oldState: Partial<T> = {};
+  for (let key in newState) {
+    oldState[key] = state[key];
+    (state as T)[key] = newState[key] as T[typeof key];
+  }
+  for (let key in newState) {
+    emit(state, key, newState[key], oldState[key]);
+    emit(state, undefined, key, newState[key], oldState[key]);
+  }
 }

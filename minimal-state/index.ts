@@ -1,7 +1,140 @@
+export {get, set, update, on, off, once, emit, clear, pure, next, merge};
+
+// main API
+function set<T, L extends keyof T>(
+  state: T,
+  key: L,
+  valueOrFunction: T[L] | ((state: T[L]) => T[L])
+) {
+  let oldValue = state[key];
+  let value =
+    typeof valueOrFunction === 'function'
+      ? (valueOrFunction as (state: T[L]) => T[L])(state[key])
+      : valueOrFunction;
+  (state as T)[key] = value;
+  emit(state, key, value, oldValue);
+  emit(state, undefined, key, value, oldValue);
+}
+
+function update<T>(state: T, key?: keyof T) {
+  if (key !== undefined) {
+    let value = state[key];
+    emit(state, key, value);
+    emit(state, undefined, key, value);
+  } else {
+    emit(state, undefined);
+  }
+}
+
+// lower level API, implements simple event emitter
+function on<T>(
+  state: T,
+  key: keyof T | undefined,
+  listener: (...args: unknown[]) => void
+): () => void;
+function on<T>(state: T, listener: (...args: unknown[]) => void): () => void;
+function on<T>(
+  state: T,
+  keyOrListener: keyof T | undefined | ((...args: unknown[]) => void),
+  listenerOrNone?: ((...args: unknown[]) => void) | undefined
+) {
+  let events = getEvents(state);
+  let key: keyof T | undefined, listener: (...args: unknown[]) => void;
+  if (listenerOrNone === undefined) {
+    key = undefined;
+    listener = keyOrListener as (...args: unknown[]) => void;
+  } else {
+    key = keyOrListener as keyof T | undefined;
+    listener = listenerOrNone as (...args: unknown[]) => void;
+  }
+  if (!events.has(key)) events.set(key, new Set());
+  events.get(key)!.add(listener);
+  return () => off(state, key, listener);
+}
+
+function off<T>(
+  state: T,
+  key: keyof T | undefined,
+  listener: (...args: unknown[]) => void
+) {
+  let events = getEvents(state);
+  let listeners = events.get(key);
+  if (!listeners) return;
+  listeners.delete(listener);
+  if (listeners.size === 0) events.delete(key);
+}
+
+function emit<T>(state: T, key: keyof T | undefined, ...args: unknown[]) {
+  let events = getEvents(state);
+  if (!events.has(key)) return;
+  for (let listener of events.get(key)!) {
+    try {
+      listener(...args);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+}
+
+function clear<T>(state: T) {
+  getEvents(state).clear();
+}
+
+// extensions
+function pure<T>(state: T | MinimalStateType<T> | StateType<T>): T {
+  let {set, update, on, emit, clear, _events, ...rest} = state as StateType<T>;
+  return rest as never;
+}
+
+function get<T, L extends keyof T>(state: T, key: L): T[L];
+function get<T, L extends keyof T>(state: T): T;
+function get<T, L extends keyof T>(state: T, key?: L): T[L] | T {
+  return key === undefined ? pure(state) : state[key];
+}
+
+function once<T>(
+  state: T,
+  key: keyof T | undefined,
+  listener: (...args: unknown[]) => void
+) {
+  let listener_ = (...args: unknown[]) => {
+    off(state, key, listener_);
+    listener(...args);
+  };
+  return on(state, key, listener_);
+}
+
+function next<T>(state: T, key: keyof T | undefined) {
+  return new Promise(r => once(state, key, value => r(value)));
+}
+
+function merge<T>(state: T, newState: Partial<T>) {
+  let oldState: Partial<T> = {};
+  for (let key in newState) {
+    oldState[key] = state[key];
+    (state as T)[key] = newState[key] as T[typeof key];
+  }
+  for (let key in newState) {
+    emit(state, key, newState[key], oldState[key]);
+    emit(state, undefined, key, newState[key], oldState[key]);
+  }
+}
+
+// internal infra for pure state
+const EV = new Map<Object, Map<unknown, Set<(...args: unknown[]) => void>>>();
+type EventMap<T> = Map<keyof T | undefined, Set<(...args: unknown[]) => void>>;
 export type MinimalStateType<T> = T & {
   _events: Map<keyof T | undefined, Set<(...args: unknown[]) => void>>;
 };
 
+function getEvents<T>(state: T | MinimalStateType<T> | StateType<T>) {
+  return (
+    (state as MinimalStateType<T>)._events ||
+    ((EV.get(state) || EV.set(state, new Map()).get(state)) as EventMap<T>)
+  );
+}
+
+// old OO API
 export type StateType<T> = T & {
   set<L extends keyof T>(
     key: L,
@@ -30,7 +163,7 @@ function State<T extends {}, M extends boolean | undefined>(
   options?: {debug?: boolean; minimal?: M}
 ): StateType<T> | MinimalStateType<T> {
   type K = keyof T;
-  let _events = new Map<K | undefined, Set<(...args: unknown[]) => void>>();
+  let _events: EventMap<T> = new Map();
 
   let api = {
     // main API
@@ -70,134 +203,3 @@ function State<T extends {}, M extends boolean | undefined>(
 }
 
 export default State;
-export {get, set, update, on, off, once, emit, clear, pure, next, merge};
-
-// main API
-function set<T, L extends keyof T>(
-  state: MinimalStateType<T>,
-  key: L,
-  valueOrFunction: T[L] | ((state: T[L]) => T[L])
-) {
-  let oldValue = state[key];
-  let value =
-    typeof valueOrFunction === 'function'
-      ? (valueOrFunction as (state: T[L]) => T[L])(state[key])
-      : valueOrFunction;
-  (state as T)[key] = value;
-  emit(state, key, value, oldValue);
-  emit(state, undefined, key, value, oldValue);
-}
-
-function update<T>(state: MinimalStateType<T>, key?: keyof T) {
-  if (key !== undefined) {
-    let value = state[key];
-    emit(state, key, value);
-    emit(state, undefined, key, value);
-  } else {
-    emit(state, undefined);
-  }
-}
-
-// lower level API, implements simple event emitter
-function on<T>(
-  state: MinimalStateType<T>,
-  key: keyof T | undefined,
-  listener: (...args: unknown[]) => void
-): () => void;
-function on<T>(
-  state: MinimalStateType<T>,
-  listener: (...args: unknown[]) => void
-): () => void;
-function on<T>(
-  state: MinimalStateType<T>,
-  keyOrListener: keyof T | undefined | ((...args: unknown[]) => void),
-  listenerOrNone?: ((...args: unknown[]) => void) | undefined
-) {
-  let {_events} = state;
-  let key: keyof T | undefined, listener: (...args: unknown[]) => void;
-  if (listenerOrNone === undefined) {
-    key = undefined;
-    listener = keyOrListener as (...args: unknown[]) => void;
-  } else {
-    key = keyOrListener as keyof T | undefined;
-    listener = listenerOrNone as (...args: unknown[]) => void;
-  }
-  if (!_events.has(key)) _events.set(key, new Set());
-  _events.get(key)!.add(listener);
-  return () => off(state, key, listener);
-}
-
-function off<T>(
-  state: MinimalStateType<T>,
-  key: keyof T | undefined,
-  listener: (...args: unknown[]) => void
-) {
-  let {_events} = state;
-  let listeners = _events.get(key);
-  if (!listeners) return;
-  listeners.delete(listener);
-  if (listeners.size === 0) _events.delete(key);
-}
-
-function emit<T>(
-  state: MinimalStateType<T>,
-  key: keyof T | undefined,
-  ...args: unknown[]
-) {
-  let {_events} = state;
-  if (!_events.has(key)) return;
-  for (let listener of _events.get(key)!) {
-    try {
-      listener(...args);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-}
-
-function clear<T>(state: MinimalStateType<T>) {
-  state._events.clear();
-}
-
-// extensions
-function pure<T>(state: MinimalStateType<T>): T {
-  let {clear, emit, on, set, update, _events, ...rest} = state as StateType<T>;
-  return rest as never;
-}
-
-function get<T, L extends keyof T>(state: MinimalStateType<T>, key: L): T[L];
-function get<T, L extends keyof T>(state: MinimalStateType<T>): T;
-function get<T, L extends keyof T>(
-  state: MinimalStateType<T>,
-  key?: L
-): T[L] | T {
-  return key === undefined ? pure(state) : state[key];
-}
-
-function once<T>(
-  state: MinimalStateType<T>,
-  key: keyof T | undefined,
-  listener: (...args: unknown[]) => void
-) {
-  let listener_ = (...args: unknown[]) => {
-    off(state, key, listener_);
-    listener(...args);
-  };
-  return on(state, key, listener_);
-}
-
-function next<T>(state: MinimalStateType<T>, key: keyof T | undefined) {
-  return new Promise(r => once(state, key, value => r(value)));
-}
-
-function merge<T>(state: MinimalStateType<T>, newState: Partial<T>) {
-  let oldState: Partial<T> = {};
-  for (let key in newState) {
-    oldState[key] = state[key];
-    (state as T)[key] = newState[key] as T[typeof key];
-  }
-  for (let key in newState) {
-    emit(state, key, newState[key], oldState[key]);
-    emit(state, undefined, key, newState[key], oldState[key]);
-  }
-}

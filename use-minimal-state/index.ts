@@ -1,6 +1,6 @@
 // simple and powerful implementation of react global state
 import {useEffect, useRef, useState} from 'react';
-import {StateType, MinimalStateType, on, off, pure} from 'minimal-state';
+import {StateType, on, off, pure} from 'minimal-state';
 
 export {
   default as default,
@@ -20,7 +20,7 @@ export {
 export {use};
 
 function use<T, L extends keyof T>(state: StateType<T>, key: L): T[L];
-function use<T, L extends keyof T>(state: MinimalStateType<T>, key: L): T[L];
+function use<T, L extends keyof T>(state: T, key: L): T[L];
 function use<
   T,
   K extends readonly [keyof T, ...(keyof T)[]] | readonly (keyof T)[]
@@ -31,12 +31,9 @@ function use<
 function use<
   T,
   K extends readonly [keyof T, ...(keyof T)[]] | readonly (keyof T)[]
->(
-  state: MinimalStateType<T>,
-  keys: K
-): {[P in keyof K]: T[K[P] extends keyof T ? K[P] : never]};
+>(state: T, keys: K): {[P in keyof K]: T[K[P] extends keyof T ? K[P] : never]};
 function use<T>(state: StateType<T>): T;
-function use<T>(state: MinimalStateType<T>): T;
+function use<T>(state: T): T;
 function use<
   T,
   L extends keyof T | undefined,

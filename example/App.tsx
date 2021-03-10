@@ -1,21 +1,20 @@
 import {render} from 'react-dom';
 import React from 'react';
-import State, {use, set, update, on, next, merge} from 'use-minimal-state';
+import {use, set, update, on, next, merge} from 'use-minimal-state';
 
 type Todo = {name: string; done: boolean};
-const state = State(
-  {
-    todos: [] as Todo[],
-    newTodo: null as Todo | null,
-    lastEdit: null as Date | null,
-  },
-  {debug: true, minimal: true}
-);
+const state = {
+  todos: [] as Todo[],
+  newTodo: null as Todo | null,
+  lastEdit: null as Date | null,
+};
+// debug
+on(state, (key, value) => console.log('update', key, value));
 
 // computed properties
 on(state, 'todos', () => set(state, 'lastEdit', new Date()));
 
-// do something on state changes
+// do something on next state change
 (async () => {
   await next(state, 'todos');
   if (state.todos.length > 0) {

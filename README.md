@@ -73,7 +73,7 @@ This is why we model `state` as a plain JS object and keep the complexity of rea
 
 ```js
 const state = {count: 0};
-set(state, 'count', 0);
+set(state, 'count', 1);
 ```
 
 The main cost of that approach is that all consumers of the `state` object have to import the functions. This is a burden if you want your state to be an encapsulated thing – e.g. you use `minimal-state` in a library/package and want to expose the `state` object to the outside to emit change events. Requiring your package consumers to import an additional peer dependency would be awkward.
@@ -114,6 +114,8 @@ state.update('count');
 set(state, 'count', 0);
 // "The count is 0"
 ```
+
+_TODO: `.use()` is not on the State object yet._
 
 ## API Reference
 

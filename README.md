@@ -101,7 +101,7 @@ state.set('count', c => c + 1);
 // "The count is 1"
 
 // the methods are merged into your object, so you can still
-// read and write like properties like always
+// read and write properties like always
 
 console.log(state.count);
 // "1"
@@ -110,7 +110,7 @@ state.count = 9000;
 state.update('count');
 // "The count is 9000"
 
-// normal library functions still work as well
+// function library still works as well
 set(state, 'count', 0);
 // "The count is 0"
 ```

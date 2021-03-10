@@ -78,10 +78,10 @@ set(state, 'count', 1);
 
 The main cost of that approach is that all consumers of the `state` object have to import the functions. This is a burden if you want your state to be an encapsulated thing – e.g. you use `minimal-state` in a library/package and want to expose the `state` object to the outside to emit change events. Requiring your package consumers to import an additional peer dependency would be awkward.
 
-Here is where OO shines, and why we also provide an OO version where the core functions are _methods_ on your `state` object:
+This is where OO shines, and why we also provide an OO version with the core functions as _methods_ on your `state` object:
 
 ```js
-const state = State({count: 0}); // call State() to add methods to your state
+const state = State({count: 0}); // call State() to add methods to state
 state.set('count', 1);
 
 // consumers don't need our library now:

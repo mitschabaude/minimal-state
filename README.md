@@ -36,7 +36,7 @@ function App() {
 
   return (
     <>
-      <div>{count} </div>
+      <div>{count}</div>
       <button onClick={increment}>+1</button>
       <button onClick={setTo9000}>9000</button>
     </>

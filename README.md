@@ -55,28 +55,129 @@ console.log(state.count); // "10"
 
 ## Without React
 
-The entire API _except_ the `use` hook is also available as separate npm package which does not depend on React:
+A version of the library without the `use` hook is also available as separate npm package, which does not depend on React:
 
 ```sh
 yarn add minimal-state
 ```
 
-In fact, `minimal-state` has no external dependencies at all and is only 800 bytes minzipped. It can be useful as a general-purpose reactive state / event-emitter.
+In fact, `minimal-state` has no external dependencies at all (and is only 800 bytes). It can be useful as a general-purpose reactive state / event-emitter. Other than `use`, the packages `use-minimal-state` and `minimal-state` are exactly equivalent.
 
-## Object-oriented API
+## Functional API
 
-The core, functional API of `use-minimal-state` adhers to the philosophy that...
+The API of `minimal-state` adhers to the philosophy that...
 
 > It is better to have 100 functions operate on one data structure than 10 functions on 10 data structures. — Alan Perlis
 
-This is why we model `state` as a plain JS object and keep the complexity of reactivity hidden in a library of functions that operate on that object:
+This is why we model `state` as a plain JS object and keep the complexity of reactivity hidden in a library of functions that operate on that object.
+
+### API Reference
+
+#### Core API
 
 ```js
-const state = {count: 0};
-set(state, 'count', 1);
+// use one state attribute:
+use(state, key) // == state[key]
+
+// use list of attributes, in a list
+use(state, [key1, key2, ...]) // == [state[key1], state[key2], ...]
+
+// use entire state
+use(state) // == shallow copy of state
+
+
+// update attribute
+update(state, key);
+
+
+// set attribute (value)
+set(state, key, value);
+
+// set attribute (function)
+set(state, key, (oldValue) => { return value });
 ```
 
-The main cost of that approach is that all consumers of the `state` object have to import the functions. This is a burden if you want your state to be an encapsulated thing – e.g. you use `minimal-state` in a library/package and want to expose the `state` object to the outside to emit change events. Requiring your package consumers to import an additional peer dependency would be awkward.
+To understand the difference between `update` and `set`, it is best to think of `set(state, key, value)` as a shortcut for
+
+```js
+state[key] = value;
+update(state, key);
+```
+
+#### Event Emitter API
+
+The core API builds on top of four functions `emit, on, off, clear` that implement a simple event emitter.
+Every `emit` triggers a call to all listeners registered with `on`.
+
+```js
+// emit event
+emit(state, key, ...args);
+
+// listen to event with specific key
+on(state, key, (...args) => {}); // (...args) are what is passed to emit
+
+// listen to event with any key
+on(state, (key, ...args) => {}); // (...args) are what is passed to emit
+
+/* on() returns an unsubscribe function to stop listening */
+let unsubscribe = on(state, key, () => {});
+unsubscribe();
+
+// or unsubscribe directly (needs reference to the listener function)
+let listener = (...args) => {};
+on(state, key, listener);
+off(state, key, listener);
+
+// unsubscribe all listeners, for all keys
+clear(state);
+/* TODO: clear(state, key) */
+```
+
+Internally, both `update(state, key)` and `set(state, key, value)` call `emit(state, key, ...args)` _twice_, but in slightly different ways:
+
+```js
+update(state, key);
+// calls:
+emit(state, key, state[key]);
+emit(state, undefined, key, state[key]);
+
+set(state, key, value);
+// calls:
+emit(state, key, value, state[key]); // state[key] is the previous value!
+emit(state, undefined, key, value, state[key]);
+```
+
+That is, if your `on` listeners need access to the value _and_ the previous value, you have to always change the state with `set`.
+
+Thus, the `undefined` event is a special "wildcard" event that gets triggered for every update.
+
+Side note: `use` calls `on` internally but does not even look at the emitted value, so you can trigger `use(state, key)` either with `update(state, key)` or with `set(state, key, value)` or even with `emit(state, key)`.
+
+#### Additional API / helper functions
+
+This list of useful extensions may grow over time:
+
+```js
+once(state, key, listener);
+```
+
+Like `on`, but unsubscribes when called the first time.
+
+```js
+await next(state, key);
+```
+
+Promise that resolves on the next `emit` (= promisified `once`).
+
+```js
+merge(state, newState);
+```
+
+Like `set` for multiple key-value pairs, can be DRYer e.g. `set(state, "count", count)` is equivalent to `merge(state, {count})`.
+
+## Object-oriented API
+
+The main cost of the functional approach is that consumers of a `state` object have to import all the functions. This is a burden if you want your state to be encapsulated – e.g. you use `minimal-state` in a library/package and want to expose a `state` object to the outside to emit change events. Requiring your package consumers to import an additional peer dependency would be awkward.
 
 This is where OO shines, and why we also provide an OO version with the core functions as _methods_ on your `state` object:
 
@@ -88,10 +189,10 @@ state.set('count', 1);
 export {state};
 ```
 
-More comprehensive example:
+Comprehensive example:
 
 ```js
-import State, {set} from 'minimal-state';
+import State, {set, pure} from 'minimal-state';
 
 let state = State({count: 0});
 
@@ -113,10 +214,15 @@ state.update('count');
 // function library still works as well
 set(state, 'count', 0);
 // "The count is 0"
+
+state.clear();
+
+// get back a snapshot of the state without methods
+let pureState = pure(state);
+JSON.stringify(pureState); // "{\"count\": 0}"
 ```
 
-_TODO: `.use()` is not on the State object yet._
+The full list of methods on the object returned by `State` is
+`set, update, on, emit, clear`, plus an internal `_events` property which holds attached listeners.
 
-## API Reference
-
-_TODO_
+_TODO: `use` should be a method as well when `State` is imported from `use-minimal-state`._

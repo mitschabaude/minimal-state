@@ -1,18 +1,25 @@
 import {render} from 'react-dom';
 import React from 'react';
-import {use, set, update, on, next, merge} from 'use-minimal-state';
+import State, {use, set, update, on, next, merge} from 'use-minimal-state';
 
 type Todo = {name: string; done: boolean};
-const state = {
+const state = State({
   todos: [] as Todo[],
   newTodo: null as Todo | null,
   lastEdit: null as Date | null,
-};
+});
+
+const numberOfTodos = [5];
+set(numberOfTodos, 0);
+
 // debug
 on(state, (key, value) => console.log('update', key, value));
 
 // computed properties
 on(state, 'todos', () => set(state, 'lastEdit', new Date()));
+
+on(state, 'todos', () => set(numberOfTodos, state.todos.length));
+on(numberOfTodos, n => console.log('number of todos', n));
 
 // do something on next state change
 (async () => {
@@ -23,11 +30,13 @@ on(state, 'todos', () => set(state, 'lastEdit', new Date()));
 })();
 
 function App() {
-  let [todos, lastEdit] = use(state, ['todos', 'lastEdit']);
+  let {lastEdit} = use(state);
+  let [todos] = state.use(['todos']);
+  let ntd = use(numberOfTodos);
   let clear = () => set(state, 'todos', todos => todos.filter(t => !t.done));
   return (
     <div>
-      <h1>Todos ({todos.length})</h1>
+      <h1>Todos ({ntd})</h1>
       <TodoInput />
       <Space />
       <div>

@@ -1,10 +1,8 @@
 // simple and powerful implementation of react global state
 import {useEffect, useRef, useState} from 'react';
-import {StateType, on, off, pure} from 'minimal-state';
+import State, {StateType, on, off, pure} from 'minimal-state';
 
 export {
-  default as default,
-  get,
   set,
   update,
   on,
@@ -17,7 +15,7 @@ export {
   merge,
 } from 'minimal-state';
 
-export {use};
+export {use, UsableState as default};
 
 function use<T, L extends keyof T>(state: StateType<T>, key: L): T[L];
 function use<T, L extends keyof T>(state: T, key: L): T[L];
@@ -32,13 +30,13 @@ function use<
   T,
   K extends readonly [keyof T, ...(keyof T)[]] | readonly (keyof T)[]
 >(state: T, keys: K): {[P in keyof K]: T[K[P] extends keyof T ? K[P] : never]};
-function use<T>(state: StateType<T>): T;
-function use<T>(state: T): T;
+function use<T>(state: T): T extends any[] ? T[0] : T;
+function use<T>(state: StateType<T>): T extends any[] ? T[0] : T;
 function use<
   T,
   L extends keyof T | undefined,
   K extends readonly [keyof T, ...(keyof T)[]] | readonly (keyof T)[]
->(state: StateType<T>, key?: L | K) {
+>(state: T, key?: L | K) {
   let [, setState] = useState(0);
   let newKeys: K =
     key instanceof Array ? (key as K) : (([key] as unknown) as K);
@@ -65,6 +63,26 @@ function use<
     : key === undefined
     ? pure(state)
     : state[key as keyof T];
+}
+
+type UsableStateType<T> = StateType<T> & {
+  use(): T;
+  use<L extends keyof T>(key: L): T[L];
+  use<K extends readonly [keyof T, ...(keyof T)[]] | readonly (keyof T)[]>(
+    keys: K
+  ): {[P in keyof K]: T[K[P] extends keyof T ? K[P] : never]};
+};
+
+function UsableState<T extends {}>(
+  initialState: T,
+  options?: {debug?: boolean}
+): UsableStateType<T> {
+  let state = State(initialState, {...options, minimal: false});
+  return Object.assign(state, {
+    use(key?: any) {
+      return use(state, key);
+    },
+  });
 }
 
 // original, simple use

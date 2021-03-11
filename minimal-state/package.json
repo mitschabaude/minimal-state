@@ -12,7 +12,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc --emitDeclarationOnly && esbuild index.ts --bundle --outfile=dist/index.js --format=esm --target=es6",
+    "build": "tsc --emitDeclarationOnly && esbuild index.ts --bundle --outfile=dist/index.js --format=esm --target=es2018",
     "size": "cat dist/index.js | esbuild --minify | gzip | wc -c",
     "prepublishOnly": "cp ../README.md README.md"
   },

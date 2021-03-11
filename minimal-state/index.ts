@@ -1,19 +1,39 @@
-export {get, set, update, on, off, once, emit, clear, pure, next, merge};
+export {set, update, on, off, once, emit, clear, pure, next, merge};
 
 // main API
 function set<T, L extends keyof T>(
   state: T,
   key: L,
-  valueOrFunction: T[L] | ((state: T[L]) => T[L])
+  value: T[L] | ((value: T[L]) => T[L])
+): void;
+function set<T extends unknown[], L extends keyof T>(
+  state: T,
+  value: T[0]
+): void;
+function set<T, L extends keyof T>(
+  state: T,
+  keyOrValue: L | T[L] | ((state: T[L]) => T[L]),
+  valueOrUndefined?: T[L] | ((state: T[L]) => T[L])
 ) {
+  let twoParam = state instanceof Array && valueOrUndefined === undefined;
+  let key = twoParam ? (0 as L) : (keyOrValue as L);
+  let valueOrFunction = twoParam
+    ? (keyOrValue as T[L] | ((state: T[L]) => T[L]))
+    : (valueOrUndefined as T[L] | ((state: T[L]) => T[L]));
+
   let oldValue = state[key];
   let value =
     typeof valueOrFunction === 'function'
-      ? (valueOrFunction as (state: T[L]) => T[L])(state[key])
+      ? (valueOrFunction as (state: T[L]) => T[L])(oldValue)
       : valueOrFunction;
-  (state as T)[key] = value;
+  state[key] = value;
+
   emit(state, key, value, oldValue);
-  emit(state, undefined, key, value, oldValue);
+  if (twoParam) {
+    emit(state, undefined, value, oldValue);
+  } else {
+    emit(state, undefined, key, value, oldValue);
+  }
 }
 
 function update<T>(state: T, key?: keyof T) {
@@ -22,7 +42,13 @@ function update<T>(state: T, key?: keyof T) {
     emit(state, key, value);
     emit(state, undefined, key, value);
   } else {
-    emit(state, undefined);
+    if (state instanceof Array) {
+      let value = state[0];
+      emit(state, 0, value);
+      emit(state, undefined, value);
+    } else {
+      emit(state, undefined);
+    }
   }
 }
 
@@ -81,14 +107,20 @@ function clear<T>(state: T) {
 }
 
 // extensions
-function pure<T>(state: T | MinimalStateType<T> | StateType<T>): T {
+function pure<T>(
+  state: T | MinimalStateType<T> | StateType<T>
+): T extends unknown[] ? T[0] : T {
+  if (state instanceof Array) return state[0];
   let {set, update, on, emit, clear, _events, ...rest} = state as StateType<T>;
   return rest as never;
 }
 
 function get<T, L extends keyof T>(state: T, key: L): T[L];
-function get<T, L extends keyof T>(state: T): T;
-function get<T, L extends keyof T>(state: T, key?: L): T[L] | T {
+function get<T, L extends keyof T>(state: T): T extends unknown[] ? T[0] : T;
+function get<T, L extends keyof T>(
+  state: T,
+  key?: L
+): T[L] | (T extends unknown[] ? T[0] : T) {
   return key === undefined ? pure(state) : state[key];
 }
 

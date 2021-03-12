@@ -12,7 +12,6 @@ export {
   clear,
   pure,
   next,
-  merge,
 } from 'minimal-state';
 
 export {use, UsableState as default};

@@ -1,25 +1,28 @@
 import {render} from 'react-dom';
 import React from 'react';
-import State, {use, set, update, on, next, merge} from 'use-minimal-state';
+import {use, set, update, on, next} from 'use-minimal-state';
 
 type Todo = {name: string; done: boolean};
-const state = State({
+
+// state
+const state = {
   todos: [] as Todo[],
   newTodo: null as Todo | null,
   lastEdit: null as Date | null,
-});
-
+};
+// atom (= wrap anything in an array)
 const numberOfTodos = [5];
-set(numberOfTodos, 0);
 
 // debug
 on(state, (key, value) => console.log('update', key, value));
+on(numberOfTodos, n => console.log('number of todos', n));
 
 // computed properties
 on(state, 'todos', () => set(state, 'lastEdit', new Date()));
-
 on(state, 'todos', () => set(numberOfTodos, state.todos.length));
-on(numberOfTodos, n => console.log('number of todos', n));
+
+set(state, {newTodo: {name: 'Write todos', done: false}});
+set(numberOfTodos, () => 0);
 
 // do something on next state change
 (async () => {
@@ -31,7 +34,7 @@ on(numberOfTodos, n => console.log('number of todos', n));
 
 function App() {
   let {lastEdit} = use(state);
-  let [todos] = state.use(['todos']);
+  let [todos] = use(state, ['todos']);
   let ntd = use(numberOfTodos);
   let clear = () => set(state, 'todos', todos => todos.filter(t => !t.done));
   return (
@@ -89,7 +92,7 @@ function TodoInput() {
           if (!newTodo) return;
           state.todos.push(newTodo);
           update(state, 'todos');
-          merge(state, {newTodo: null});
+          set(state, {newTodo: null});
         }
       }}
       value={newTodo?.name || ''}

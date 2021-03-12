@@ -47,10 +47,10 @@ function App() {
 // stuff as well:
 on(state, 'count', c => console.log('The count is', c));
 
-set(state, 'count', 10); // "The count is 10", updates component
+state.count = 10;
+update(state, 'count'); // "The count is 10", updates component
 
-state.count = 11;
-update(state, 'count'); // "The count is 11", updates component
+set(state, 'count', 11); // "The count is 11", updates component
 
 // set() and update() are synchronous
 console.log(state.count); // "11"
@@ -218,7 +218,7 @@ Side note: `use` calls `on` internally but does not look at the emitted value, s
 once(state, key, listener);
 ```
 
-Like `on`, but unsubscribes when called the first time.
+Like `on`, but unsubscribes when triggered the first time.
 
 ```js
 await next(state, key);
@@ -243,7 +243,7 @@ export {state};
 Full OO API:
 
 ```js
-import State from 'use-minimal-state';
+import State, {pure} from 'use-minimal-state';
 
 // create state instance (= shallow copy of initialState plus methods)
 let state = State(initialState);

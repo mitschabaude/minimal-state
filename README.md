@@ -226,6 +226,14 @@ await next(state, key);
 
 Promise that resolves on the next `emit` (= promisified `once`).
 
+```js
+is(state, key, value);
+is(state, {key: value});
+is(atom, value);
+```
+
+"Declarative" version of `set` which does nothing if the value did not change.
+
 ### Object-oriented API
 
 The main cost of the functional approach is that consumers of a `state` object have to import all the functions. This is a burden if you want your state to be encapsulated – e.g. you use `minimal-state` in a library/package and want to expose a `state` object to the outside to emit change events. Requiring your package consumers to import an additional peer dependency would be awkward.

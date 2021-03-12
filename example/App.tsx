@@ -1,6 +1,6 @@
 import {render} from 'react-dom';
 import React from 'react';
-import {use, set, update, on, next} from 'use-minimal-state';
+import {use, set, update, on, next, is} from 'use-minimal-state';
 
 type Todo = {name: string; done: boolean};
 
@@ -18,11 +18,19 @@ on(state, (key, value) => console.log('update', key, value));
 on(numberOfTodos, n => console.log('number of todos', n));
 
 // computed properties
-on(state, 'todos', () => set(state, 'lastEdit', new Date()));
-on(state, 'todos', () => set(numberOfTodos, state.todos.length));
+on(state, 'todos', () => is(state, 'lastEdit', new Date()));
+on(state, 'todos', () => is(numberOfTodos, state.todos.length));
 
 set(state, {newTodo: {name: 'Write todos', done: false}});
-set(numberOfTodos, () => 0);
+set(numberOfTodos, () => 100);
+
+// be declarative
+is(numberOfTodos, 0);
+is(numberOfTodos, 0);
+is(numberOfTodos, 0);
+is(state, {newTodo: null});
+is(state, {newTodo: null});
+is(state, {newTodo: null});
 
 // do something on next state change
 (async () => {

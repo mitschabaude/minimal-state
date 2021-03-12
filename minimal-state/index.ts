@@ -1,4 +1,4 @@
-export {set, update, on, off, once, emit, clear, pure, next};
+export {set, update, on, off, once, emit, clear, pure, next, is};
 
 // main API
 function set<T, L extends keyof T>(
@@ -17,14 +17,15 @@ function set<T extends {}, L extends keyof T>(
 function set<T, L extends keyof T>(
   state: T,
   keyOrValue: L | T[L] | ((state: T[L]) => T[L]) | Partial<T>,
-  valueOrUndefined?: T[L] | ((state: T[L]) => T[L])
+  valueOrUndefined?: T[L] | ((state: T[L]) => T[L]),
+  noChangeNoop?: boolean
 ) {
   if (
     valueOrUndefined === undefined &&
     !(state instanceof Array) &&
     typeof keyOrValue === 'object'
   ) {
-    return merge(state, keyOrValue as Partial<T>);
+    return merge(state, keyOrValue as Partial<T>, noChangeNoop);
   }
   let isAtom = state instanceof Array && valueOrUndefined === undefined;
   let key = isAtom ? (0 as L) : (keyOrValue as L);
@@ -37,6 +38,7 @@ function set<T, L extends keyof T>(
     typeof valueOrFunction === 'function'
       ? (valueOrFunction as (state: T[L]) => T[L])(oldValue)
       : valueOrFunction;
+  if (noChangeNoop && value === oldValue) return;
   state[key] = value;
 
   if (isAtom) {
@@ -61,13 +63,14 @@ function update<T>(state: T, key?: keyof T) {
   }
 }
 
-function merge<T>(state: T, newState: Partial<T>) {
+function merge<T>(state: T, newState: Partial<T>, noChangeNoop?: boolean) {
   let oldState: Partial<T> = {};
   for (let key in newState) {
     oldState[key] = state[key];
     (state as T)[key] = newState[key] as T[typeof key];
   }
   for (let key in newState) {
+    if (noChangeNoop && oldState[key] === newState[key]) continue;
     emit(state, key, newState[key], oldState[key]);
     emit(state, undefined, key, newState[key], oldState[key]);
   }
@@ -145,6 +148,7 @@ function pure<T>(
   return rest as never;
 }
 
+// this could be useful if it replicated use semantics exactly
 function get<T, L extends keyof T>(state: T, key: L): T[L];
 function get<T, L extends keyof T>(state: T): T extends unknown[] ? T[0] : T;
 function get<T, L extends keyof T>(
@@ -168,6 +172,20 @@ function once<T>(
 
 function next<T>(state: T, key: keyof T | undefined) {
   return new Promise(r => once(state, key, value => r(value)));
+}
+
+function is<T, L extends keyof T>(state: T, key: L, value: T[L]): void;
+function is<T extends unknown[], L extends keyof T>(
+  state: T,
+  value: T[0]
+): void;
+function is<T extends {}, L extends keyof T>(state: T, value: Partial<T>): void;
+function is<T, L extends keyof T>(
+  state: T,
+  keyOrValue: L | T[L] | Partial<T>,
+  valueOrUndefined?: T[L]
+) {
+  (set as any)(state, keyOrValue, valueOrUndefined, true);
 }
 
 // internal infra

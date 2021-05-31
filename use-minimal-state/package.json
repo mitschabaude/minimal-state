@@ -1,6 +1,6 @@
 {
   "name": "use-minimal-state",
-  "version": "3.4.0",
+  "version": "3.4.1",
   "description": "Simple and powerful React state management tool",
   "author": "Gregor Mitscha-Baude <gregor.mitscha-baude@gmx.at>",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc --emitDeclarationOnly && esbuild index.ts --bundle --outfile=dist/index.js --external:react --format=esm --target=es2018",
+    "build": "tsc --emitDeclarationOnly && esbuild index.ts --bundle --outfile=dist/index.js --external:react --external:minimal-state --format=esm --target=es2018",
     "size": "cat dist/index.js | esbuild --minify | gzip | wc -c",
     "prepublishOnly": "cp ../README.md README.md"
   },

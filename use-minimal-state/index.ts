@@ -2,20 +2,8 @@
 import {useEffect, useRef, useState} from 'react';
 import State, {StateType, on, off, pure} from 'minimal-state';
 
-export {
-  set,
-  update,
-  on,
-  off,
-  once,
-  emit,
-  clear,
-  pure,
-  next,
-  is,
-} from 'minimal-state';
-
-export {use, UsableState as default};
+export {set, update, once, emit, clear, next, is} from 'minimal-state';
+export {use, on, off, pure, UsableState as default};
 
 function use<T, L extends keyof T>(state: StateType<T>, key: L): T[L];
 function use<T, L extends keyof T>(state: T, key: L): T[L];
@@ -38,8 +26,7 @@ function use<
   K extends readonly [keyof T, ...(keyof T)[]] | readonly (keyof T)[]
 >(state: T, key?: L | K) {
   let [, setState] = useState(0);
-  let newKeys: K =
-    key instanceof Array ? (key as K) : (([key] as unknown) as K);
+  let newKeys: K = key instanceof Array ? (key as K) : ([key] as unknown as K);
   let keys = useStableArray(newKeys);
 
   useEffect(() => {

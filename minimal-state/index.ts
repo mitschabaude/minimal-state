@@ -1,4 +1,4 @@
-export {set, update, on, off, once, emit, clear, pure, next, is};
+export {set, update, on, off, once, emit, clear, pure, next, until, is};
 
 // main API
 function set<T, L extends keyof T>(
@@ -172,6 +172,26 @@ function once<T>(
 
 function next<T>(state: T, key: keyof T | undefined) {
   return new Promise(r => once(state, key, value => r(value)));
+}
+
+async function until<T extends {}, K extends keyof T>(
+  state: T,
+  key: K,
+  condition?: (value: T[K]) => boolean
+): Promise<void> {
+  let value = state[key];
+  if (condition ? condition(value) : value) {
+    return;
+  } else {
+    return new Promise(resolve => {
+      let off = on(state, key, value => {
+        if (condition ? condition(value as T[K]) : value) {
+          off();
+          resolve();
+        }
+      });
+    });
+  }
 }
 
 function is<T, L extends keyof T>(state: T, key: L, value: T[L]): void;

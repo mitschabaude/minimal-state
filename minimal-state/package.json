@@ -1,10 +1,16 @@
 {
   "name": "minimal-state",
-  "description": "Simple and powerful React state management tool",
-  "version": "5.5.0",
+  "description": "Simple and powerful reactive state management",
+  "version": "5.6.0",
   "author": "Gregor Mitscha-Baude <gregor.mitscha-baude@gmx.at>",
   "license": "MIT",
-  "repository": "github:mitschabaude/minimal-state",
+  "homepage": "https://github.com/mitschabaude/minimal-state",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mitschabaude/minimal-state.git",
+    "directory": "minimal-state"
+  },
+  "type": "module",
   "main": "dist/index.js",
   "browser": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -2,7 +2,7 @@
 import {useEffect, useRef, useState} from 'react';
 import State, {StateType, on, off, pure} from 'minimal-state';
 
-export {set, update, once, emit, clear, next, is} from 'minimal-state';
+export {set, update, once, emit, clear, next, is, until} from 'minimal-state';
 export {use, on, off, pure, UsableState as default};
 
 function use<T, L extends keyof T>(state: StateType<T>, key: L): T[L];
